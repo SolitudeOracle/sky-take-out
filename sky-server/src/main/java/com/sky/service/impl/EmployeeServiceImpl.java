@@ -81,11 +81,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 2.设置Entity的其他属性
         employee.setStatus(StatusConstant.ENABLE);
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
 
         // 3.调用mapper把Entity对象传入
         employeeMapper.insert(employee);
@@ -117,8 +112,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = Employee.builder()
                 .status(status)
                 .id(id)
-                .updateTime(LocalDateTime.now())
-                .updateUser(BaseContext.getCurrentId())
                 .build();
 
         // 2.调用mapper修改
@@ -152,11 +145,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 2.先把DTO属性复制给Entity对象
         BeanUtils.copyProperties(employeeDTO, employee);
 
-        // 3.再把其他属性设置一下
-        employee.setUpdateTime(LocalDateTime.now());
-        employee.setUpdateUser(BaseContext.getCurrentId());
-
-        // 4.调用mapper修改
+        // 3.调用mapper修改
         employeeMapper.update(employee);
     }
 
