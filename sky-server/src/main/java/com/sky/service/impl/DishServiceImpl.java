@@ -151,4 +151,10 @@ public class DishServiceImpl implements DishService {
         dishMapper.update(dish);
 
     }
+
+    @Override
+    public List<Dish> list(Long categoryId) {
+        // 调用mapper查询
+        return dishMapper.list(categoryId);
+    }
 }
