@@ -138,4 +138,17 @@ public class DishServiceImpl implements DishService {
         }
 
     }
+
+    @Override
+    public void startOrStop(Integer status, Long id) {
+        // 1.创建一个Entity对象
+        Dish dish = Dish.builder()
+                .status(status)
+                .id(id)
+                .build();
+
+        // 2.调用mapper修改
+        dishMapper.update(dish);
+
+    }
 }
