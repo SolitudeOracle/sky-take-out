@@ -45,4 +45,9 @@ public class SetmealServiceImpl implements SetmealService {
     public void deleteBatch(List<Long> ids) {
         setmealMapper.deleteBatch(ids);
     }
+
+    @Override
+    public SetmealVO getById(Long id) {
+        return setmealMapper.getById(id);
+    }
 }
