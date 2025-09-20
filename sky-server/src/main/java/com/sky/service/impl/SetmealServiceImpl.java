@@ -13,6 +13,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class SetmealServiceImpl implements SetmealService {
     @Autowired
@@ -37,5 +39,10 @@ public class SetmealServiceImpl implements SetmealService {
 
         // 3.返回PageResult对象
         return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public void deleteBatch(List<Long> ids) {
+        setmealMapper.deleteBatch(ids);
     }
 }
