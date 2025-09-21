@@ -23,7 +23,7 @@ public class SetmealController {
     @PostMapping
     public Result save(@RequestBody SetmealDTO setmealDTO) {
         log.info("新增套餐");
-        setmealService.save(setmealDTO);
+        setmealService.saveWithDish(setmealDTO);
         return Result.success();
     }
 
@@ -44,7 +44,7 @@ public class SetmealController {
     @GetMapping("/{id}")
     public Result<SetmealVO> getById(@PathVariable Long id) {
         log.info("查询套餐信息，id：{}", id);
-        SetmealVO setmealVO = setmealService.getById(id);
+        SetmealVO setmealVO = setmealService.getByIdWithDish(id);
         return Result.success(setmealVO);
     }
 
