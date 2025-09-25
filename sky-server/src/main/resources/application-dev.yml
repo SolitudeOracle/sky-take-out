@@ -12,6 +12,10 @@ sky:
     access-key-id: ${OSS_ACCESS_KEY_ID}
     access-key-secret: ${OSS_ACCESS_KEY_SECRET}
     bucket-name: sky-kaitai
+
+  wechat:
+    appid: wxc24fb54a08557870
+    secret: 796d975249a5f9312057aa7ea29b6a0b
 spring:
   redis:
     host: localhost
