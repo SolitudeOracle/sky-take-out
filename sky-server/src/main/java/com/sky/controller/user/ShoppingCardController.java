@@ -36,4 +36,10 @@ public class ShoppingCardController {
         shoppingCardService.cleanShoppingCard();
         return Result.success();
     }
+
+    @PostMapping("/sub")
+    public Result sub(@RequestBody ShoppingCartDTO shoppingCartDTO) {
+        shoppingCardService.sub(shoppingCartDTO);
+        return Result.success();
+    }
 }
