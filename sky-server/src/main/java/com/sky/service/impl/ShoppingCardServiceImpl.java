@@ -69,4 +69,15 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
 
 
     }
+
+    @Override
+    public List<ShoppingCart> showShoppingCard() {
+        // 1.构建shoppingCart对象
+        ShoppingCart shoppingCart = ShoppingCart.builder()
+                .userId(BaseContext.getCurrentId())
+                .build();
+
+        // 2.调用mapper查询
+        return shoppingCardMapper.list(shoppingCart);
+    }
 }
