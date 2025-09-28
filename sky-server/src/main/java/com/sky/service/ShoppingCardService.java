@@ -9,4 +9,6 @@ public interface ShoppingCardService {
     void addShoppingCard(ShoppingCartDTO shoppingCartDTO);
 
     List<ShoppingCart> showShoppingCard();
+
+    void cleanShoppingCard();
 }

@@ -80,4 +80,11 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
         // 2.调用mapper查询
         return shoppingCardMapper.list(shoppingCart);
     }
+
+    @Override
+    public void cleanShoppingCard() {
+        Long userId = BaseContext.getCurrentId();
+
+        shoppingCardMapper.deleteByUserId(userId);
+    }
 }
