@@ -7,8 +7,8 @@ import com.sky.entity.Setmeal;
 import com.sky.entity.ShoppingCart;
 import com.sky.mapper.DishMapper;
 import com.sky.mapper.SetmealMapper;
-import com.sky.mapper.ShoppingCardMapper;
-import com.sky.service.ShoppingCardService;
+import com.sky.mapper.ShoppingCartMapper;
+import com.sky.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +19,9 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class ShoppingCardServiceImpl implements ShoppingCardService {
+public class ShoppingCartServiceImpl implements ShoppingCartService {
     @Autowired
-    private ShoppingCardMapper shoppingCardMapper;
+    private ShoppingCartMapper shoppingCartMapper;
     @Autowired
     private DishMapper dishMapper;
     @Autowired
@@ -33,13 +33,13 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
         ShoppingCart shoppingCart = new ShoppingCart();
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         shoppingCart.setUserId(BaseContext.getCurrentId());
-        List<ShoppingCart> list = shoppingCardMapper.list(shoppingCart);
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
 
         // 2.如果在，则数量加1，update
         if (list != null && list.size() > 0) {
             ShoppingCart cart = list.get(0);
             cart.setNumber(cart.getNumber() + 1);
-            shoppingCardMapper.updateNumber(cart);
+            shoppingCartMapper.updateNumber(cart);
         } else {
             // 3.如果不在，则添加到购物车，数量默认为1，insert
             Long dishId = shoppingCart.getDishId();
@@ -64,7 +64,7 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
             shoppingCart.setNumber(1);
             shoppingCart.setCreateTime(LocalDateTime.now());
 
-            shoppingCardMapper.insert(shoppingCart);
+            shoppingCartMapper.insert(shoppingCart);
         }
 
 
@@ -78,14 +78,14 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
                 .build();
 
         // 2.调用mapper查询
-        return shoppingCardMapper.list(shoppingCart);
+        return shoppingCartMapper.list(shoppingCart);
     }
 
     @Override
     public void cleanShoppingCard() {
         Long userId = BaseContext.getCurrentId();
 
-        shoppingCardMapper.deleteByUserId(userId);
+        shoppingCartMapper.deleteByUserId(userId);
     }
 
     @Override
@@ -94,19 +94,19 @@ public class ShoppingCardServiceImpl implements ShoppingCardService {
         ShoppingCart shoppingCart = new ShoppingCart();
         BeanUtils.copyProperties(shoppingCartDTO, shoppingCart);
         shoppingCart.setUserId(BaseContext.getCurrentId());
-        List<ShoppingCart> list = shoppingCardMapper.list(shoppingCart);
+        List<ShoppingCart> list = shoppingCartMapper.list(shoppingCart);
 
         // 2.如果数量大于1则减1，数量等于1则删除，update
         if (list != null && list.size() > 0) {
             ShoppingCart cart = list.get(0);
 
             if (cart.getNumber() == 1) {
-                shoppingCardMapper.deleteById(cart.getId());
+                shoppingCartMapper.deleteById(cart.getId());
                 return;
             }
 
             cart.setNumber(cart.getNumber() - 1);
-            shoppingCardMapper.updateNumber(cart);
+            shoppingCartMapper.updateNumber(cart);
         }
     }
 }

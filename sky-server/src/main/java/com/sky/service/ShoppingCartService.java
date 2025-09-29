@@ -5,7 +5,7 @@ import com.sky.entity.ShoppingCart;
 
 import java.util.List;
 
-public interface ShoppingCardService {
+public interface ShoppingCartService {
     void addShoppingCard(ShoppingCartDTO shoppingCartDTO);
 
     List<ShoppingCart> showShoppingCard();
