@@ -314,4 +314,15 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.update(orders);
     }
+
+    @Override
+    public void cancelById(OrdersCancelDTO ordersCancelDTO) {
+        Orders orders = new Orders().builder()
+                .id(ordersCancelDTO.getId())
+                .status(Orders.CANCELLED)
+                .rejectionReason(ordersCancelDTO.getCancelReason())
+                .build();
+
+        orderMapper.update(orders);
+    }
 }
