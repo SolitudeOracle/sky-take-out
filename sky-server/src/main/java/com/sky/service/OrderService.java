@@ -31,4 +31,6 @@ public interface OrderService {
     void cancel(Long id);
 
     void repeat(Long id);
+
+    PageResult pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 }

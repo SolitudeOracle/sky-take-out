@@ -7,6 +7,9 @@ import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
+
+import java.time.LocalDateTime;
 
 @Mapper
 public interface OrderMapper {
@@ -30,4 +33,8 @@ public interface OrderMapper {
 
     @Select("select * from orders where id = #{id}")
     Orders getById(Long id);
+
+    @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{check_out_time} " +
+            "where number = #{orderNumber}")
+    void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime checkOutTime, String orderNumber);
 }

@@ -15,19 +15,19 @@
                 cancel_reason=#{cancelReason},
             </if>
             <if test="rejectionReason != null and rejectionReason!='' ">
-                rejection_reason=#{rejectionReason},
+                rejection_reason = #{rejectionReason},
             </if>
             <if test="cancelTime != null">
-                cancel_time=#{cancelTime},
+                cancel_time = #{cancelTime},
             </if>
             <if test="payStatus != null">
-                pay_status=#{payStatus},
+                pay_status = #{payStatus},
             </if>
             <if test="payMethod != null">
-                pay_method=#{payMethod},
+                pay_method = #{payMethod},
             </if>
             <if test="checkoutTime != null">
-                checkout_time=#{checkoutTime},
+                checkout_time = #{checkoutTime},
             </if>
             <if test="status != null">
                 status = #{status},
