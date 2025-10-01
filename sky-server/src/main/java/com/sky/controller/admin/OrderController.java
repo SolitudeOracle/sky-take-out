@@ -42,7 +42,7 @@ public class OrderController {
     @PutMapping("/confirm")
     public Result confirm(@RequestBody OrdersConfirmDTO ordersConfirmDTO) {
         log.info("订单确认：{}", ordersConfirmDTO.getId());
-        orderService.confirm(ordersConfirmDTO.getId());
+        orderService.confirm(ordersConfirmDTO);
         return Result.success();
     }
 }
