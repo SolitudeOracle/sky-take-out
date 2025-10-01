@@ -215,5 +215,26 @@ public class OrderServiceImpl implements OrderService {
         orderMapper.update(orders);
     }
 
+    @Override
+    @Transactional
+    public void repeat(Long id) {
+        // 1.插入订单数据
+        Orders orders = orderMapper.getById(id);
+
+        orders.setId(null);
+
+        orderMapper.insert(orders);
+
+        // 2.插入订单详情数据
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
+
+        for (OrderDetail orderDetail : orderDetailList) {
+            orderDetail.setId(null);
+            orderDetail.setOrderId(orders.getId());
+        }
+
+        orderDetailMapper.insertBatch(orderDetailList);
+    }
+
 
 }
