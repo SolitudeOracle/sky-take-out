@@ -198,4 +198,22 @@ public class OrderServiceImpl implements OrderService {
         return orderVO;
     }
 
+    @Override
+    public void cancel(Long id) {
+        // 1.查询当前订单状态
+        Orders orders = orderMapper.getById(id);
+
+        // 2.判断当前订单是否可取消
+        if (!orders.getStatus().equals(Orders.PENDING_PAYMENT)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 3.设置订单状态为取消
+        orders.setStatus(Orders.CANCELLED);
+
+        // 4.更新订单
+        orderMapper.update(orders);
+    }
+
+
 }
