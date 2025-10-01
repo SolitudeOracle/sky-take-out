@@ -57,8 +57,22 @@ public class OrderController {
 
     @PutMapping("/cancel")
     public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) {
-        log.info("订单拒绝：{}", ordersCancelDTO);
+        log.info("订单取消：{}", ordersCancelDTO);
         orderService.cancelById(ordersCancelDTO);
+        return Result.success();
+    }
+
+    @PutMapping("/delivery/{id}")
+    public Result delivery(@PathVariable String id) {
+        log.info("订单派送：{}", id);
+        orderService.delivery(id);
+        return Result.success();
+    }
+
+    @PutMapping("/complete/{id}")
+    public Result complete(@PathVariable String id) {
+        log.info("订单完成：{}", id);
+        orderService.complete(id);
         return Result.success();
     }
 }

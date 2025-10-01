@@ -40,4 +40,8 @@ public interface OrderService {
     void rejection(OrdersRejectionDTO ordersRejectionDTO);
 
     void cancelById(OrdersCancelDTO ordersCancelDTO);
+
+    void delivery(String id);
+
+    void complete(String id);
 }

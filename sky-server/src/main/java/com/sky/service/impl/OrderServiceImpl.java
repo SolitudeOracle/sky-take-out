@@ -325,4 +325,25 @@ public class OrderServiceImpl implements OrderService {
 
         orderMapper.update(orders);
     }
+
+    @Override
+    public void delivery(String id) {
+        Orders orders = new Orders().builder()
+                .id(Long.valueOf(id))
+                .status(Orders.DELIVERY_IN_PROGRESS)
+                .build();
+
+        orderMapper.update(orders);
+
+    }
+
+    @Override
+    public void complete(String id) {
+        Orders orders = new Orders().builder()
+                .id(Long.valueOf(id))
+                .status(Orders.CANCELLED)
+                .build();
+
+        orderMapper.update(orders);
+    }
 }
