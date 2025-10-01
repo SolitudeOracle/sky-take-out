@@ -295,4 +295,14 @@ public class OrderServiceImpl implements OrderService {
         }
         return orderStatisticsVO;
     }
+
+    @Override
+    public void confirm(Long id) {
+        Orders orders = Orders.builder()
+                .id(id)
+                .status(Orders.CONFIRMED)
+                .build();
+
+        orderMapper.update(orders);
+    }
 }
