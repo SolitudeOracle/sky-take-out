@@ -312,7 +312,7 @@ public class OrderServiceImpl implements OrderService {
 
         // 2.把集合中的数据复制到VO集合中
         List<Orders> ordersList = page.getResult();
-        if (CollectionUtils.isEmpty(ordersList)) {
+        if (!CollectionUtils.isEmpty(ordersList)) {
             for (Orders orders : ordersList) {
                 OrderVO orderVO = new OrderVO();
 
