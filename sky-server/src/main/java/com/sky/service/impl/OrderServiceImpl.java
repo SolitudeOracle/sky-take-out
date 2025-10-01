@@ -17,6 +17,7 @@ import com.sky.result.PageResult;
 import com.sky.service.OrderService;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
+import com.sky.vo.OrderStatisticsVO;
 import com.sky.vo.OrderSubmitVO;
 import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -267,5 +269,30 @@ public class OrderServiceImpl implements OrderService {
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
 
         return new PageResult(page.getTotal(), page.getResult());
+    }
+
+    @Override
+    public OrderStatisticsVO statistics() {
+        List<Map<String, Object>> list = orderMapper.statistics();
+
+        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
+
+        for (Map<String, Object> row : list) {
+            Integer status = (Integer) row.get("status");
+            Long count = (Long) row.get("num");
+
+            switch (status) {
+                case 2:
+                    orderStatisticsVO.setToBeConfirmed(count.intValue());
+                    break;
+                case 3:
+                    orderStatisticsVO.setConfirmed(count.intValue());
+                    break;
+                case 4:
+                    orderStatisticsVO.setDeliveryInProgress(count.intValue());
+                    break;
+            }
+        }
+        return orderStatisticsVO;
     }
 }
