@@ -37,7 +37,7 @@ public class OrderController {
     @GetMapping("/details/{id}")
     public Result<OrderVO> details(@PathVariable Long id){
         log.info("订单详情：{}", id);
-        OrderVO orderVO = orderService.getById(id);
+        OrderVO orderVO = orderService.details(id);
         return Result.success(orderVO);
     }
 
@@ -49,28 +49,28 @@ public class OrderController {
     }
 
     @PutMapping("/rejection")
-    public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) {
+    public Result rejection(@RequestBody OrdersRejectionDTO ordersRejectionDTO) throws Exception {
         log.info("订单拒绝：{}", ordersRejectionDTO);
         orderService.rejection(ordersRejectionDTO);
         return Result.success();
     }
 
     @PutMapping("/cancel")
-    public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) {
+    public Result cancel(@RequestBody OrdersCancelDTO ordersCancelDTO) throws Exception {
         log.info("订单取消：{}", ordersCancelDTO);
-        orderService.cancelById(ordersCancelDTO);
+        orderService.cancel(ordersCancelDTO);
         return Result.success();
     }
 
     @PutMapping("/delivery/{id}")
-    public Result delivery(@PathVariable String id) {
+    public Result delivery(@PathVariable Long id) {
         log.info("订单派送：{}", id);
         orderService.delivery(id);
         return Result.success();
     }
 
     @PutMapping("/complete/{id}")
-    public Result complete(@PathVariable String id) {
+    public Result complete(@PathVariable Long id) {
         log.info("订单完成：{}", id);
         orderService.complete(id);
         return Result.success();

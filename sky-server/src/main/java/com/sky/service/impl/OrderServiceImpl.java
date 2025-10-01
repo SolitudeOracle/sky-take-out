@@ -1,5 +1,7 @@
 package com.sky.service.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -13,6 +15,7 @@ import com.sky.exception.ShoppingCartBusinessException;
 import com.sky.mapper.*;
 import com.sky.result.PageResult;
 import com.sky.service.OrderService;
+import com.sky.utils.HttpClientUtil;
 import com.sky.utils.WeChatPayUtil;
 import com.sky.vo.OrderPaymentVO;
 import com.sky.vo.OrderStatisticsVO;
@@ -21,14 +24,18 @@ import com.sky.vo.OrderVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,6 +52,10 @@ public class OrderServiceImpl implements OrderService {
     private AddressBookMapper addressBookMapper;
     @Autowired
     private WeChatPayUtil weChatPayUtil;
+    @Value("${sky.shop.address}")
+    private String shopAddress;
+    @Value("${sky.baidu.ak}")
+    private String ak;
 
     @Override
     @Transactional
@@ -55,6 +66,8 @@ public class OrderServiceImpl implements OrderService {
         if (addressBook == null) {
             throw new AddressBookBusinessException(MessageConstant.ADDRESS_BOOK_IS_NULL);
         }
+
+        checkOutOfRange(addressBook.getProvinceName() + addressBook.getCityName() + addressBook.getDistrictName() + addressBook.getDetail());
 
         // 1.2.购物车为空就抛出异常
         ShoppingCart shoppingCart = new ShoppingCart();
@@ -208,56 +221,78 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderVO getById(Long id) {
-        // 1.创建VO对象
-        OrderVO orderVO = new OrderVO();
+    public OrderVO details(Long id) {
+        Orders orders = orderMapper.getById(id);
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
 
         // 2.添加订单数据
-        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
-        if (orderDetailList != null && !orderDetailList.isEmpty()) {
-            orderVO.setOrderDetailList(orderDetailList);
-        }
+        OrderVO orderVO = new OrderVO();
+        BeanUtils.copyProperties(orders, orderVO);
+        orderVO.setOrderDetailList(orderDetailList);
 
         // 3.返回对象
         return orderVO;
     }
 
     @Override
-    public void cancel(Long id) {
-        // 1.查询当前订单状态
+    public void userCancelById(Long id) throws Exception {
+        // 1.先做检验
+        // 1.1.获取订单
         Orders orders = orderMapper.getById(id);
 
-        // 2.判断当前订单是否可取消
-        if (!orders.getStatus().equals(Orders.PENDING_PAYMENT)) {
+        // 1.2.订单必须存在
+        if (orders == null) {
+            throw new OrderBusinessException(MessageConstant.ORDER_NOT_FOUND);
+        }
+
+        // 1.3.订单的状态必须大于2
+        if (orders.getStatus() > 2) {
             throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
         }
 
-        // 3.设置订单状态为取消
-        orders.setStatus(Orders.CANCELLED);
+        // 2.更新订单
+        Orders newOrders = new Orders();
 
-        // 4.更新订单
-        orderMapper.update(orders);
+        newOrders.setId(id);
+
+        // 退款
+        if (orders.getPayStatus().equals(Orders.REFUND)) {
+            // 1.调用工具类退款
+            weChatPayUtil.refund(orders.getNumber(), orders.getNumber(), new BigDecimal(0.01), new BigDecimal(0.01));
+            // 2.修改订单状态
+            newOrders.setPayStatus(Orders.REFUND);
+        }
+
+        newOrders.setStatus(Orders.CANCELLED);
+        newOrders.setCancelReason("用户取消");
+        newOrders.setCancelTime(LocalDateTime.now());
+
+        orderMapper.update(newOrders);
     }
 
     @Override
     @Transactional
-    public void repeat(Long id) {
-        // 1.插入订单数据
-        Orders orders = orderMapper.getById(id);
+    public void repetition(Long id) {
+        // 1.查询用户id
+        Long userId = BaseContext.getCurrentId();
 
-        orders.setId(null);
-
-        orderMapper.insert(orders);
-
-        // 2.插入订单详情数据
+        // 2.通过id查询订单详情
         List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(id);
 
-        for (OrderDetail orderDetail : orderDetailList) {
-            orderDetail.setId(null);
-            orderDetail.setOrderId(orders.getId());
-        }
+        // 3.把订单详情转换成购物车
+        List<ShoppingCart> shoppingCartList = orderDetailList.stream().map(x -> {
+            ShoppingCart shoppingCart = new ShoppingCart();
+            BeanUtils.copyProperties(x, shoppingCart);
+            shoppingCart.setUserId(userId);
+            shoppingCart.setCreateTime(LocalDateTime.now());
 
-        orderDetailMapper.insertBatch(orderDetailList);
+            return shoppingCart;
+        }).collect(Collectors.toList());
+
+        // 4.将购物车数据插入到数据库
+        shoppingCartMapper.insertBatch(shoppingCartList);
+
+
     }
 
     @Override
@@ -266,32 +301,57 @@ public class OrderServiceImpl implements OrderService {
 
         Page<Orders> page = orderMapper.pageQuery(ordersPageQueryDTO);
 
-        return new PageResult(page.getTotal(), page.getResult());
+        List<OrderVO> list = getOrderVOList(page);
+
+        return new PageResult(page.getTotal(), list);
+    }
+
+    private List<OrderVO> getOrderVOList(Page<Orders> page) {
+        // 1.创建一个VO集合
+        List<OrderVO> orderVOList = new ArrayList<>();
+
+        // 2.把集合中的数据复制到VO集合中
+        List<Orders> ordersList = page.getResult();
+        if (CollectionUtils.isEmpty(ordersList)) {
+            for (Orders orders : ordersList) {
+                OrderVO orderVO = new OrderVO();
+
+                BeanUtils.copyProperties(orders, orderVO);
+
+                String orderDishes = getOrderDishesStr(orders);
+                orderVO.setOrderDishes(orderDishes);
+
+                orderVOList.add(orderVO);
+            }
+        }
+
+        // 3.返回
+        return orderVOList;
+    }
+
+    private String getOrderDishesStr(Orders orders) {
+        // 1.查询订单详情
+        List<OrderDetail> orderDetailList = orderDetailMapper.getByOrderId(orders.getId());
+
+        // 2.把OrderDetail转换成String
+        List<String> dishList = orderDetailList.stream()
+                .map(x -> x.getName() + "*" + x.getNumber() + ";")
+                .collect(Collectors.toList());
+
+        // 3.拼接菜品信息
+        return String.join("", dishList);
+
     }
 
     @Override
     public OrderStatisticsVO statistics() {
-        List<Map<String, Object>> list = orderMapper.statistics();
+        // 1.统计数据
+        Integer toBeConfirmed = orderMapper.countStatus(Orders.TO_BE_CONFIRMED);
+        Integer confirmed = orderMapper.countStatus(Orders.CONFIRMED);
+        Integer deliveryInProgress = orderMapper.countStatus(Orders.DELIVERY_IN_PROGRESS);
 
-        OrderStatisticsVO orderStatisticsVO = new OrderStatisticsVO();
-
-        for (Map<String, Object> row : list) {
-            Integer status = (Integer) row.get("status");
-            Long count = (Long) row.get("num");
-
-            switch (status) {
-                case 2:
-                    orderStatisticsVO.setToBeConfirmed(count.intValue());
-                    break;
-                case 3:
-                    orderStatisticsVO.setConfirmed(count.intValue());
-                    break;
-                case 4:
-                    orderStatisticsVO.setDeliveryInProgress(count.intValue());
-                    break;
-            }
-        }
-        return orderStatisticsVO;
+        // 2.返回数据
+        return new OrderStatisticsVO(toBeConfirmed, confirmed, deliveryInProgress);
     }
 
     @Override
@@ -305,45 +365,151 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public void rejection(OrdersRejectionDTO ordersRejectionDTO) {
-        Orders orders = new Orders().builder()
-                .id(ordersRejectionDTO.getId())
-                .status(Orders.CANCELLED)
-                .rejectionReason(ordersRejectionDTO.getRejectionReason())
-                .build();
+    public void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception {
+        // 1.获取订单
+        Orders orders = orderMapper.getById(ordersRejectionDTO.getId());
+
+        if (orders == null || !orders.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Integer payStatus = orders.getPayStatus();
+        if (payStatus.equals(Orders.PAID)) {
+            weChatPayUtil.refund(orders.getNumber(), orders.getNumber(), new BigDecimal(0.01), new BigDecimal(0.01));
+        }
+
+        // 2.更新订单
+        Orders newOrders = new Orders();
+        newOrders.setId(orders.getId());
+        newOrders.setStatus(Orders.CANCELLED);
+        newOrders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
+        newOrders.setCancelTime(LocalDateTime.now());
 
         orderMapper.update(orders);
     }
 
     @Override
-    public void cancelById(OrdersCancelDTO ordersCancelDTO) {
-        Orders orders = new Orders().builder()
-                .id(ordersCancelDTO.getId())
-                .status(Orders.CANCELLED)
-                .rejectionReason(ordersCancelDTO.getCancelReason())
-                .build();
+    public void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception {
+        // 1.获取订单
+        Orders orders = orderMapper.getById(ordersCancelDTO.getId());
+
+        if (orders == null || !orders.getStatus().equals(Orders.TO_BE_CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        Integer payStatus = orders.getPayStatus();
+        if (payStatus.equals(Orders.PAID)) {
+            weChatPayUtil.refund(orders.getNumber(), orders.getNumber(), new BigDecimal(0.01), new BigDecimal(0.01));
+        }
+
+        // 2.更新订单
+        Orders newOrders = new Orders();
+        newOrders.setId(orders.getId());
+        newOrders.setStatus(Orders.CANCELLED);
+        newOrders.setCancelReason(ordersCancelDTO.getCancelReason());
+        newOrders.setCancelTime(LocalDateTime.now());
 
         orderMapper.update(orders);
     }
 
     @Override
-    public void delivery(String id) {
-        Orders orders = new Orders().builder()
-                .id(Long.valueOf(id))
-                .status(Orders.DELIVERY_IN_PROGRESS)
-                .build();
+    public void delivery(Long id) {
+        // 1.获取订单
+        Orders orders = orderMapper.getById(id);
+
+        if (orders == null || !orders.getStatus().equals(Orders.CONFIRMED)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 2.更新订单
+        Orders newOrders = new Orders();
+        newOrders.setId(orders.getId());
+        newOrders.setStatus(Orders.DELIVERY_IN_PROGRESS);
 
         orderMapper.update(orders);
+
 
     }
 
     @Override
-    public void complete(String id) {
-        Orders orders = new Orders().builder()
-                .id(Long.valueOf(id))
-                .status(Orders.CANCELLED)
-                .build();
+    public void complete(Long id) {
+        // 1.获取订单
+        Orders orders = orderMapper.getById(id);
+
+        if (orders == null || !orders.getStatus().equals(Orders.DELIVERY_IN_PROGRESS)) {
+            throw new OrderBusinessException(MessageConstant.ORDER_STATUS_ERROR);
+        }
+
+        // 2.更新订单
+        Orders newOrders = new Orders();
+        newOrders.setId(orders.getId());
+        orders.setDeliveryTime(LocalDateTime.now());
+        newOrders.setStatus(Orders.COMPLETED);
 
         orderMapper.update(orders);
+    }
+
+    /**
+     * 检查客户的收货地址是否超出配送范围
+     * @param address
+     */
+    private void checkOutOfRange(String address) {
+        Map map = new HashMap();
+        map.put("address",shopAddress);
+        map.put("output","json");
+        map.put("ak",ak);
+
+        //获取店铺的经纬度坐标
+        String shopCoordinate = HttpClientUtil.doGet("https://api.map.baidu.com/geocoding/v3", map);
+
+        JSONObject jsonObject = JSON.parseObject(shopCoordinate);
+        if(!jsonObject.getString("status").equals("0")){
+            throw new OrderBusinessException("店铺地址解析失败");
+        }
+
+        //数据解析
+        JSONObject location = jsonObject.getJSONObject("result").getJSONObject("location");
+        String lat = location.getString("lat");
+        String lng = location.getString("lng");
+        //店铺经纬度坐标
+        String shopLngLat = lat + "," + lng;
+
+        map.put("address",address);
+        //获取用户收货地址的经纬度坐标
+        String userCoordinate = HttpClientUtil.doGet("https://api.map.baidu.com/geocoding/v3", map);
+
+        jsonObject = JSON.parseObject(userCoordinate);
+        if(!jsonObject.getString("status").equals("0")){
+            throw new OrderBusinessException("收货地址解析失败");
+        }
+
+        //数据解析
+        location = jsonObject.getJSONObject("result").getJSONObject("location");
+        lat = location.getString("lat");
+        lng = location.getString("lng");
+        //用户收货地址经纬度坐标
+        String userLngLat = lat + "," + lng;
+
+        map.put("origin",shopLngLat);
+        map.put("destination",userLngLat);
+        map.put("steps_info","0");
+
+        //路线规划
+        String json = HttpClientUtil.doGet("https://api.map.baidu.com/directionlite/v1/driving", map);
+
+        jsonObject = JSON.parseObject(json);
+        if(!jsonObject.getString("status").equals("0")){
+            throw new OrderBusinessException("配送路线规划失败");
+        }
+
+        //数据解析
+        JSONObject result = jsonObject.getJSONObject("result");
+        JSONArray jsonArray = (JSONArray) result.get("routes");
+        Integer distance = (Integer) ((JSONObject) jsonArray.get(0)).get("distance");
+
+        if(distance > 5000){
+            //配送距离超过5000米
+            throw new OrderBusinessException("超出配送范围");
+        }
     }
 }

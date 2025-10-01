@@ -47,23 +47,23 @@ public class OrderController {
     }
 
     @GetMapping("/orderDetail/{id}")
-    public Result<OrderVO> orderDetail(@PathVariable Long id) {
+    public Result<OrderVO> details(@PathVariable Long id) {
         log.info("查询订单详情，订单id为：{}", id);
-        OrderVO orderVO = orderService.getById(id);
+        OrderVO orderVO = orderService.details(id);
         return Result.success(orderVO);
     }
 
     @PutMapping("cancel/{id}")
-    public Result cancel(@PathVariable Long id) {
+    public Result cancel(@PathVariable Long id) throws Exception {
         log.info("取消订单：{}", id);
-        orderService.cancel(id);
+        orderService.userCancelById(id);
         return Result.success();
     }
 
     @PostMapping("/repetition/{id}")
     public Result repetition(@PathVariable Long id) {
         log.info("再来一单：{}", id);
-        orderService.repeat(id);
+        orderService.repetition(id);
         return Result.success();
     }
 

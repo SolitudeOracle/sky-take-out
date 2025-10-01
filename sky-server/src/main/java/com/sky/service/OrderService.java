@@ -25,11 +25,11 @@ public interface OrderService {
 
     PageResult queryPage(OrdersPageQueryDTO ordersPageQueryDTO);
 
-    OrderVO getById(Long id);
+    OrderVO details(Long id);
 
-    void cancel(Long id);
+    void userCancelById(Long id) throws Exception;
 
-    void repeat(Long id);
+    void repetition(Long id);
 
     PageResult pageQuery(OrdersPageQueryDTO ordersPageQueryDTO);
 
@@ -37,11 +37,11 @@ public interface OrderService {
 
     void confirm(OrdersConfirmDTO ordersConfirmDTO);
 
-    void rejection(OrdersRejectionDTO ordersRejectionDTO);
+    void rejection(OrdersRejectionDTO ordersRejectionDTO) throws Exception;
 
-    void cancelById(OrdersCancelDTO ordersCancelDTO);
+    void cancel(OrdersCancelDTO ordersCancelDTO) throws Exception;
 
-    void delivery(String id);
+    void delivery(Long id);
 
-    void complete(String id);
+    void complete(Long id);
 }

@@ -41,7 +41,7 @@ public interface OrderMapper {
             "where number = #{orderNumber}")
     void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime checkOutTime, String orderNumber);
 
-    @Select("select status, count(*) num from orders group by status;")
-    List<Map<String,Object>> statistics();
+    @Select("select count(*) num from orders where status = #{status}")
+    Integer countStatus(Integer status);
 
 }

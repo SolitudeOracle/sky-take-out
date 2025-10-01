@@ -51,6 +51,10 @@ sky:
     user-ttl: 604800000
     # 设置前端传递过来的令牌名称
     user-token-name: authentication
+  shop:
+    address: ${sky.shop.address}
+  baidu:
+    ak: ${sky.baidu.ak}
 
   alioss:
     endpoint: ${alioss.endpoint}

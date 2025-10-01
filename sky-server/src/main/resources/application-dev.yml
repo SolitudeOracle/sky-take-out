@@ -24,6 +24,10 @@ sky:
     notifyUrl: https://5428faef.r32.cpolar.top/wxpay/pay.php
     refundNotifyUrl: https://5428faef.r32.cpolar.topm/wxpay/pay.php
 
+  shop:
+    address: 山东省德州市德城区德兴墅香苑
+  baidu:
+    ak: zj5NjR7TQKnBMareM7lXk7YVeQTYRqDb
 spring:
   redis:
     host: localhost
