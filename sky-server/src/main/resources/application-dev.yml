@@ -25,7 +25,7 @@ sky:
     refundNotifyUrl: https://5428faef.r32.cpolar.topm/wxpay/pay.php
 
   shop:
-    address: 山东省德州市德城区德兴墅香苑
+    address: 北京市朝阳区新街大道一号楼8层
   baidu:
     ak: zj5NjR7TQKnBMareM7lXk7YVeQTYRqDb
 spring:
