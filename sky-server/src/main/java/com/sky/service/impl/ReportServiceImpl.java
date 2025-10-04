@@ -62,7 +62,7 @@ public class ReportServiceImpl implements ReportService {
             map.put("status", Orders.COMPLETED);
 
             // 3.获取营业额，并放入turnoverList里
-            Double turnover = orderMapper.getByMap(map);
+            Double turnover = orderMapper.sumByMap(map);
             turnover = turnover == null ? 0.0 : turnover;
             turnoverList.add(turnover);
         }

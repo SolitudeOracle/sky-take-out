@@ -48,7 +48,7 @@ public interface OrderMapper {
     @Select("select * from orders where status = #{status} and order_time < #{time}")
     List<Orders> getByStatusAndOrderTimeOut(Integer status, LocalDateTime time);
 
-    Double getByMap(Map<String, Object> map);
+    Double sumByMap(Map<String, Object> map);
 
     Integer countByMap(Map<String, Object> map);
 
