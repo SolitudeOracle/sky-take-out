@@ -398,7 +398,7 @@ public class OrderServiceImpl implements OrderService {
         newOrders.setRejectionReason(ordersRejectionDTO.getRejectionReason());
         newOrders.setCancelTime(LocalDateTime.now());
 
-        orderMapper.update(orders);
+        orderMapper.update(newOrders);
     }
 
     @Override
@@ -422,7 +422,7 @@ public class OrderServiceImpl implements OrderService {
         newOrders.setCancelReason(ordersCancelDTO.getCancelReason());
         newOrders.setCancelTime(LocalDateTime.now());
 
-        orderMapper.update(orders);
+        orderMapper.update(newOrders);
     }
 
     @Override
@@ -439,9 +439,7 @@ public class OrderServiceImpl implements OrderService {
         newOrders.setId(orders.getId());
         newOrders.setStatus(Orders.DELIVERY_IN_PROGRESS);
 
-        orderMapper.update(orders);
-
-
+        orderMapper.update(newOrders);
     }
 
     @Override
@@ -459,7 +457,7 @@ public class OrderServiceImpl implements OrderService {
         orders.setDeliveryTime(LocalDateTime.now());
         newOrders.setStatus(Orders.COMPLETED);
 
-        orderMapper.update(orders);
+        orderMapper.update(newOrders);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.sky.mapper;
 
 import com.github.pagehelper.Page;
+import com.sky.dto.GoodsSalesDTO;
 import com.sky.dto.OrdersPageQueryDTO;
 import com.sky.entity.Orders;
 import com.sky.vo.OrderPaymentVO;
@@ -48,4 +49,8 @@ public interface OrderMapper {
     List<Orders> getByStatusAndOrderTimeOut(Integer status, LocalDateTime time);
 
     Double getByMap(Map<String, Object> map);
+
+    Integer countByMap(Map<String, Object> map);
+
+    List<GoodsSalesDTO> getTop10(LocalDateTime begin, LocalDateTime end);
 }

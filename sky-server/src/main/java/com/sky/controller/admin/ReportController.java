@@ -2,6 +2,8 @@ package com.sky.controller.admin;
 
 import com.sky.result.Result;
 import com.sky.service.ReportService;
+import com.sky.vo.OrderReportVO;
+import com.sky.vo.SalesTop10ReportVO;
 import com.sky.vo.TurnoverReportVO;
 import com.sky.vo.UserReportVO;
 import lombok.extern.slf4j.Slf4j;
@@ -29,8 +31,7 @@ public class ReportController {
     @GetMapping("/turnoverStatistics")
     public Result<TurnoverReportVO> turnoverStatistics(
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
-            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end
-    ) {
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
         log.info("查询营业额数据：{}到{}", begin, end);
         return Result.success(reportService.getTurnoverStatistics(begin, end));
     }
@@ -44,9 +45,24 @@ public class ReportController {
     @GetMapping("/userStatistics")
     public Result<UserReportVO> userStatistics(
             @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
-            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end
-    ) {
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
         log.info("查询营业额数据：{}到{}", begin, end);
         return Result.success(reportService.getUserStatistics(begin, end));
+    }
+
+    @GetMapping("/ordersStatistics")
+    public Result<OrderReportVO> ordersStatistics(
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+        log.info("查询营业额数据：{}到{}", begin, end);
+        return Result.success(reportService.getOrdersStatistics(begin, end));
+    }
+
+    @GetMapping("/top10")
+    public Result<SalesTop10ReportVO> top10(
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate begin,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate end) {
+        log.info("查询营业额数据：{}到{}", begin, end);
+        return Result.success(reportService.getTop10(begin, end));
     }
 }
